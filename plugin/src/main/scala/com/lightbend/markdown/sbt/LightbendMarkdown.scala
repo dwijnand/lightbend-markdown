@@ -23,6 +23,7 @@ object LightbendMarkdownKeys {
   val markdownTheme = settingKey[Option[String]]("The markdown theme object")
   val markdownSourceUrl = settingKey[Option[URL]]("A URL to the source of the markdown files")
   val markdownUseBuiltinTheme = settingKey[Boolean]("Whether the builtin markdown theme should be used")
+  val markdownGenerateIndex = settingKey[Boolean]("Whether to build the index of the documentation")
   val markdownValidateDocs = taskKey[Unit]("Validates the play docs to ensure they compile and that all links resolve.")
   val markdownValidateExternalLinks = taskKey[Seq[String]]("Validates that all the external links are valid, by checking that they return 200.")
   val markdownGenerateRefReport = taskKey[MarkdownRefReport]("Parses all markdown files and generates a report of references")
@@ -77,6 +78,7 @@ object LightbendMarkdown extends AutoPlugin {
       "api/scala/index.html" -> "Scala"
     ),
     markdownUseBuiltinTheme := true,
+    markdownGenerateIndex := false,
     markdownTheme := {
       if (markdownUseBuiltinTheme.value) {
         Some("com.lightbend.markdown.theme.builtin.BuiltinMarkdownTheme")
@@ -217,6 +219,7 @@ object LightbendMarkdown extends AutoPlugin {
     val outputDir = (target in markdownGenerateAllDocumentation).value
     val markdownThemeOption = markdownTheme.value.fold(Seq.empty[String])(Seq("-t", _))
     val markdownSourceUrlOption = markdownSourceUrl.value.fold(Seq.empty[String])(url => Seq("-s", url.toString))
+    val markdownGenerateIndexOption = if (markdownGenerateIndex.value) Seq("-g") else Nil
 
     val options = Seq(
       "-classpath", classpathOption,
@@ -225,7 +228,7 @@ object LightbendMarkdown extends AutoPlugin {
       "-n", markdownDocsTitle.value,
       "-a", apiDocsOptions,
       "-o", outputDir.getAbsolutePath
-    ) ++ markdownThemeOption ++ markdownSourceUrlOption
+    ) ++ markdownThemeOption ++ markdownSourceUrlOption ++ markdownGenerateIndexOption
 
     val process = Fork.java.fork(ForkOptions(), options)
 

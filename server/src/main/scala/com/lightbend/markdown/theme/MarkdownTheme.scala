@@ -16,7 +16,7 @@ trait MarkdownTheme {
                  sidebar: Option[Html], apiDocs: Seq[(String, String)], sourceUrl: Option[String]): Html =
     html.documentation(projectName, title, home, content, sidebar, apiDocs, sourceUrl)
 
-  /** Render the sidebare */
+  /** Render the sidebar */
   def renderSidebar(hierarchy: List[play.doc.Toc]): Html =
     html.sidebar(hierarchy)
 
@@ -39,6 +39,7 @@ trait MarkdownTheme {
 object MarkdownTheme {
   def load(classLoader: ClassLoader, objectName: Option[String]): MarkdownTheme = {
     objectName match {
+      case Some("bare") => BareTheme
       case Some(name) => classLoader.loadClass(name + "$").getField("MODULE$").get(null).asInstanceOf[MarkdownTheme]
       case None => DefaultMarkdownTheme
     }
@@ -46,3 +47,12 @@ object MarkdownTheme {
 }
 
 object DefaultMarkdownTheme extends MarkdownTheme
+
+trait BareTheme extends MarkdownTheme {
+  override def renderPage(projectName: Option[String], title: Option[String], home: String, content: Html,
+                          sidebar: Option[Html], apiDocs: Seq[(String, String)], sourceUrl: Option[String]): Html = content
+  override def renderSidebar(hierarchy: List[Toc]): Html = Html("")
+  override def renderNextLink(toc: TocTree): Html = Html("")
+}
+
+object BareTheme extends BareTheme
